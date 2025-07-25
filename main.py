@@ -1,60 +1,82 @@
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-from pytube import YouTube
-from gtts import gTTS
-import whisper
-import subprocess
+import logging
 import os
-import re
-import uuid
+import datetime
 
-app = Flask(__name__)
+# === Initialize App ===
+app = Flask(__name__, static_folder="static", static_url_path="")
 CORS(app)
 
-def clean_for_ffmpeg(text):
-    return re.sub(r"[^a-zA-Z0-9,.?! ]", "", text)
+# === Logging Setup ===
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
 
-@app.route('/generate', methods=['POST'])
+logger = logging.getLogger("FRAGMENTS-API")
+
+# === Routes ===
+
+@app.route("/")
+def serve_index():
+    logger.info("Serving frontend HTML...")
+    return send_from_directory("static", "index.html")
+
+@app.route("/generate", methods=["POST"])
 def generate_video():
-    data = request.json
-    youtube_url = data.get("youtube_url")
-    prompt_text = data.get("prompt")
+    data = request.get_json()
 
-    if not youtube_url or not prompt_text:
-        return jsonify({"error": "Missing YouTube URL or prompt"}), 400
+    prompt = data.get("prompt")
+    youtube_links = data.get("youtube_links")
 
-    video = YouTube(youtube_url).streams.filter(file_extension='mp4').first()
-    video_filename = f"video_{uuid.uuid4().hex}.mp4"
-    video.download(filename=video_filename)
+    logger.info("Generate request received.")
+    logger.info(f"Prompt: {prompt}")
+    logger.info(f"Videos: {youtube_links}")
 
-    tts = gTTS(text=prompt_text, lang="en")
-    voice_file = f"voice_{uuid.uuid4().hex}.mp3"
-    tts.save(voice_file)
+    if not prompt or not youtube_links:
+        logger.warning("Missing prompt or YouTube links.")
+        return jsonify({"error": "Missing prompt or YouTube links"}), 400
 
-    model = whisper.load_model("base")
-    result = model.transcribe(voice_file, word_timestamps=True, language="en")
-    segments = result["segments"]
+    # === Placeholder logic ===
+    try:
+        # You can replace this with actual generation logic
+        logger.info("Pretending to generate videos...")
+        return jsonify({"message": "✅ Video generation started!"})
+    except Exception as e:
+        logger.error(f"Generation failed: {str(e)}")
+        return jsonify({"error": "Video generation failed."}), 500
 
-    filters = ""
-    for segment in segments:
-        for word_info in segment.get("words", []):
-            word = clean_for_ffmpeg(word_info["word"])
-            start = word_info["start"]
-            end = word_info["end"]
-            filters += (
-                f"drawtext=text='{word}':"
-                f"fontsize=60:fontcolor=white:bordercolor=black:borderw=2:"
-                f"x=(w-text_w)/2:y=(h-text_h)/2:"
-                f"enable='between(t,{start},{end})',"
-            )
-    filters = filters.rstrip(",")
+@app.route("/chat", methods=["POST"])
+def ai_chat():
+    data = request.get_json()
+    user_input = data.get("message")
 
-    output_file = f"final_{uuid.uuid4().hex}.mp4"
-    cmd = f"""ffmpeg -y -i "{video_filename}" -i "{voice_file}" \
-    -vf "{filters}" -map 0:v -map 1:a -c:v libx264 -c:a aac -shortest "{output_file}" """
-    subprocess.call(cmd, shell=True)
+    logger.info(f"Chat message received: {user_input}")
 
-    return send_file(output_file, as_attachment=True)
+    if not user_input:
+        return jsonify({"error": "Message is required"}), 400
 
+    # TODO: Integrate with real AI
+    response = f"🤖 Echo: {user_input}"
+    logger.info(f"AI Responds: {response}")
+    return jsonify({"response": response})
+
+@app.errorhandler(404)
+def not_found(e):
+    logger.warning("404 - Not Found")
+    return jsonify({"error": "Route not found"}), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    logger.error(f"500 - Internal Server Error: {e}")
+    return jsonify({"error": "Internal Server Error"}), 500
+
+# === Run App ===
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    port = int(os.environ.get("PORT", 10000))
+    logger.info(f"🔥 FRAGMENTS API starting on port {port}")
+    app.run(host="0.0.0.0", port=port)
