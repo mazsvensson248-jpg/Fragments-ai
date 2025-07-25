@@ -1,0 +1,6 @@
+flask
+flask-cors
+pytube
+gtts
+openai-whisper
+ffmpeg-python
