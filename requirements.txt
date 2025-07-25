@@ -1,6 +1,14 @@
-flask
-flask-cors
-pytube
-gtts
-openai-whisper
-ffmpeg-python
+services:
+  - type: web
+    name: fragments-ai
+    env: python
+    region: frankfurt
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app
+    envVars:
+      - key: OPENROUTER_API_KEY
+        value: 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
+      - key: PORT
+        value: 10000
+    plan: free
+    autoDeploy: true
