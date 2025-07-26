@@ -1,7 +1,8 @@
 Flask
 flask-cors
-pytube
 gTTS
-openai-whisper
+whisper
+pytube
 torch
 ffmpeg-python
+gunicorn
