@@ -9,7 +9,7 @@ services:
       echo "🧠 Preparing to build the ultimate AI..."
       pip install --upgrade pip
       pip install -r requirements.txt
-    startCommand: python main.py
+    startCommand: gunicorn main:app
     autoDeploy: true
     repo: https://github.com/mazsvensson248-jpg/Fragments-ai
     branch: main
@@ -24,6 +24,7 @@ services:
         - requirements.txt
         - static/
         - render.yaml
+        - templates/
     routes:
       - type: rewrite
         source: /*
