@@ -2,7 +2,7 @@ Flask
 flask-cors
 gTTS
 pytube
-whisper
+openai-whisper
 torch
 ffmpeg-python
 gunicorn
