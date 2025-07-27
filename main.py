@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 from gtts import gTTS
 from pytube import YouTube
@@ -88,7 +88,17 @@ def generate_video():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Gunicorn entry point
+# Serve index.html from /static
+@app.route("/")
+def serve_index():
+    return send_from_directory("static", "index.html")
+
+# Serve other static files (like JS/CSS if needed)
+@app.route("/<path:path>")
+def serve_static(path):
+    return send_from_directory("static", path)
+
+# Gunicorn or local entry point
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
