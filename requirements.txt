@@ -1,8 +1,7 @@
-Flask
-flask-cors
-gTTS
-whisper
-pytube
-torch
-ffmpeg-python
-gunicorn
+services:
+  - type: web
+    name: ai-video-generator
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    plan: free
