@@ -1,6 +1,7 @@
 { pkgs }: {
   deps = [
-    pkgs.python311
+    pkgs.python310
     pkgs.ffmpeg
+    pkgs.git
   ];
 }
