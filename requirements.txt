@@ -1,8 +1,8 @@
-Flask==2.3.3
-flask-cors==4.0.0
-gTTS==2.5.1
-pytube==15.0.0
-whisper==1.1.10
-torch==2.3.0
-ffmpeg-python==0.2.0
-gunicorn==21.2.0
+Flask
+flask-cors
+gTTS
+pytube
+whisper
+torch
+ffmpeg-python
+gunicorn
