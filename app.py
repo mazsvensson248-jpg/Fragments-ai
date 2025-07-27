@@ -1,39 +1,43 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, render_template, jsonify, send_file
 from flask_cors import CORS
 from gtts import gTTS
-import uuid
 import os
+import uuid
 
 app = Flask(__name__)
 CORS(app)
 
-# Skapa en mapp för att spara mp3-filer
-AUDIO_FOLDER = "static/audio"
-os.makedirs(AUDIO_FOLDER, exist_ok=True)
-
 @app.route("/")
 def home():
-    return "🚀 Flask Replit API igång!"
+    return render_template("index.html")
 
-@app.route("/api/speech", methods=["POST"])
-def speech():
+@app.route("/api/video", methods=["POST"])
+def generate_video():
     data = request.get_json()
-    text = data.get("text")
+    prompt = data.get("prompt", "")
+    links = data.get("links", [])
 
-    if not text:
-        return jsonify({"error": "Ingen text skickad"}), 400
+    if not prompt or not links:
+        return jsonify({"error": "Missing data"}), 400
 
-    filename = f"{uuid.uuid4().hex}.mp3"
-    filepath = os.path.join(AUDIO_FOLDER, filename)
+    # OBS! Detta är en placeholder. Du kan koppla in riktig video-API här.
+    dummy_path = "static/dummy.mp4"
+    with open(dummy_path, "wb") as f:
+        f.write(b"\x00")  # placeholder byte
 
-    tts = gTTS(text=text, lang="sv")
-    tts.save(filepath)
+    return send_file(dummy_path, as_attachment=True, download_name="generated_video.mp4")
 
-    return jsonify({"url": f"/static/audio/{filename}"}), 200
+@app.route("/api/chat", methods=["POST"])
+def chat():
+    data = request.get_json()
+    user_msg = data.get("message", "")
 
-@app.route("/static/audio/<filename>")
-def serve_audio(filename):
-    return send_from_directory(AUDIO_FOLDER, filename)
+    if not user_msg:
+        return jsonify({"response": "Ingen fråga skickad."}), 400
+
+    # Enkel placeholder-AI
+    return jsonify({"response": f"Du sa: {user_msg}"})
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=3000)
