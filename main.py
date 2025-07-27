@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file, send_from_directory
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from gtts import gTTS
 from pytube import YouTube
@@ -6,34 +6,35 @@ import whisper
 import ffmpeg
 import os
 import re
+import uuid
 
 app = Flask(__name__)
 CORS(app)
 
-# Load the whisper model once
+# Load Whisper model once on startup
 model = whisper.load_model("base")
 
-# Helper functions
 def clean_for_ffmpeg(text):
+    """Remove unsupported characters from text."""
     return re.sub(r"[^a-zA-Z0-9,.?! ]", "", text)
 
 def download_youtube_video(url):
+    """Download YouTube video using pytube."""
     yt = YouTube(url)
-    stream = yt.streams.filter(file_extension='mp4').get_highest_resolution()
-    output_path = stream.download(filename='input_video.mp4')
-    return output_path
+    stream = yt.streams.filter(file_extension='mp4', progressive=True).order_by('resolution').desc().first()
+    filename = f"downloads/{uuid.uuid4().hex}.mp4"
+    stream.download(output_path="downloads", filename=filename.split("/")[-1])
+    return filename
 
-def mix_audio(voice_file, music_file):
-    output = "mixed_audio.mp3"
-    cmd = (
-        f"ffmpeg -y -i {voice_file} -i {music_file} "
-        f"-filter_complex \"[1:a]volume=0.3[a1];[0:a][a1]amix=inputs=2:duration=first\" "
-        f"-c:a aac -b:a 192k {output}"
-    )
-    os.system(cmd)
-    return output
+def generate_voice_audio(prompt):
+    """Generate TTS audio from text prompt."""
+    filename = f"audio/voice_{uuid.uuid4().hex}.mp3"
+    tts = gTTS(text=prompt, lang="en")
+    tts.save(filename)
+    return filename
 
-def generate_filters(segments):
+def generate_subtitle_filters(segments):
+    """Generate FFmpeg drawtext filters for subtitles."""
     filters = ""
     for segment in segments:
         for word_info in segment.get("words", []):
@@ -41,10 +42,14 @@ def generate_filters(segments):
             start = word_info["start"]
             end = word_info["end"]
             filters += (
-                f"drawtext=text='{word}':fontcolor=white:fontsize=60:bordercolor=black:borderw=2:"
-                f"x=(w-text_w)/2:y=(h-text_h)/2:enable='between(t,{start},{end})',"
+                f"drawtext=text='{word}':fontcolor=white:fontsize=48:borderw=2:bordercolor=black:"
+                f"x=(w-text_w)/2:y=h-100:enable='between(t,{start},{end})',"
             )
     return filters.rstrip(',')
+
+@app.route("/")
+def index():
+    return send_file("static/index.html")
 
 @app.route("/api/video", methods=["POST"])
 def generate_video():
@@ -56,49 +61,31 @@ def generate_video():
         return jsonify({"error": "Missing prompt or video links"}), 400
 
     try:
+        # Step 1: Download YouTube video
         video_path = download_youtube_video(links[0])
-    except Exception as e:
-        return jsonify({"error": f"YouTube download failed: {str(e)}"}), 500
 
-    try:
-        # Generate voice
-        tts = gTTS(text=prompt, lang="en")
-        tts.save("voice.mp3")
+        # Step 2: Generate voice audio
+        voice_path = generate_voice_audio(prompt)
 
-        # Transcribe
-        result = model.transcribe("voice.mp3", word_timestamps=True, language="en")
+        # Step 3: Transcribe voice to get word timestamps
+        result = model.transcribe(voice_path, word_timestamps=True, language="en")
         segments = result["segments"]
 
-        # Subtitles
-        filters = generate_filters(segments)
+        # Step 4: Generate drawtext subtitle filters
+        subtitle_filter = generate_subtitle_filters(segments)
 
-        # Final video
-        output_video = "final_video.mp4"
-        cmd = (
-            f"ffmpeg -y -i {video_path} -i voice.mp3 -vf \"{filters}\" "
-            f"-map 0:v -map 1:a -c:v libx264 -c:a aac -shortest {output_video}"
+        # Step 5: Run FFmpeg to combine everything
+        output_path = f"output/final_{uuid.uuid4().hex}.mp4"
+        ffmpeg_cmd = (
+            f"ffmpeg -y -i {video_path} -i {voice_path} -filter_complex \"{subtitle_filter}\" "
+            f"-map 0:v -map 1:a -c:v libx264 -c:a aac -b:a 192k -shortest {output_path}"
         )
-        os.system(cmd)
+        os.system(ffmpeg_cmd)
 
-        if not os.path.exists(output_video):
-            return jsonify({"error": "Failed to create video"}), 500
-
-        return send_file(output_video, as_attachment=True)
+        return jsonify({"video": output_path})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Serve index.html from /static
-@app.route("/")
-def serve_index():
-    return send_from_directory("static", "index.html")
-
-# Serve other static files (like JS/CSS if needed)
-@app.route("/<path:path>")
-def serve_static(path):
-    return send_from_directory("static", path)
-
-# Gunicorn or local entry point
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=False, host="0.0.0.0", port=8000)
