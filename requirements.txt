@@ -1,7 +1,7 @@
-services:
-  - type: web
-    name: ai-video-generator
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
-    plan: free
+Flask
+flask-cors
+gTTS
+pytube
+openai-whisper
+ffmpeg-python
+torch  # required by whisper
