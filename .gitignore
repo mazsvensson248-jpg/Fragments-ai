@@ -1,8 +1,49 @@
+# Python cache files
 __pycache__/
-*.pyc
-*.mp4
+*.py[cod]
+*.so
+
+# Environment
+.env
+*.env
+
+# macOS
+.DS_Store
+
+# VSCode & other IDE settings
+.vscode/
+.idea/
+
+# OS-generated
+Thumbs.db
+
+# Compiled files
+*.egg-info/
+*.egg
+build/
+dist/
+
+# Logs
+*.log
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# Audio/video output
 *.mp3
+*.mp4
+*.wav
+
+# Whisper/pytube output files
 input_video.mp4
-final_video.mp4
 voice.mp3
-outputs/
+final_video.mp4
+mixed_audio.mp3
+
+# Jupyter Notebooks (if used)
+*.ipynb_checkpoints
+
+# Render build cache
+render-build/
