@@ -2,38 +2,42 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from gtts import gTTS
 from pytube import YouTube
-import whisper
-import ffmpeg
 import os
 import re
 import uuid
+import subprocess
 
-# Create necessary directories
-os.makedirs("downloads", exist_ok=True)
-os.makedirs("audio", exist_ok=True)
-os.makedirs("output", exist_ok=True)
-os.makedirs("static", exist_ok=True)
+import whisper
 
+# Setup
 app = Flask(__name__)
 CORS(app)
 
-# Load Whisper model
-model = whisper.load_model("base")
+# Create necessary directories
+for folder in ["downloads", "audio", "output", "static"]:
+    os.makedirs(folder, exist_ok=True)
+
+# Load Whisper model once
+try:
+    model = whisper.load_model("base")
+except Exception as e:
+    model = None
+    print(f"Error loading Whisper: {e}")
 
 def clean_for_ffmpeg(text):
     return re.sub(r"[^a-zA-Z0-9,.?! ]", "", text)
 
 def download_youtube_video(url):
     yt = YouTube(url)
-    stream = yt.streams.filter(file_extension='mp4', progressive=True).order_by('resolution').desc().first()
+    stream = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
     if not stream:
-        raise Exception("No suitable video stream found.")
+        raise Exception("No video stream found.")
     filename = f"downloads/{uuid.uuid4().hex}.mp4"
     stream.download(output_path="downloads", filename=os.path.basename(filename))
     return filename
 
 def generate_voice_audio(prompt):
-    filename = f"audio/voice_{uuid.uuid4().hex}.mp3"
+    filename = f"audio/{uuid.uuid4().hex}.mp3"
     tts = gTTS(text=prompt, lang="en")
     tts.save(filename)
     return filename
@@ -62,7 +66,10 @@ def generate_video():
     links = data.get("links", [])
 
     if not prompt or not links:
-        return jsonify({"error": "Missing prompt or video links"}), 400
+        return jsonify({"error": "Missing 'prompt' or 'links'"}), 400
+
+    if not model:
+        return jsonify({"error": "Whisper model not loaded."}), 500
 
     try:
         video_path = download_youtube_video(links[0])
@@ -75,13 +82,16 @@ def generate_video():
 
         subtitle_filter = generate_subtitle_filters(segments)
         output_path = f"output/final_{uuid.uuid4().hex}.mp4"
-        ffmpeg_cmd = (
-            f"./ffmpeg -y -i {video_path} -i {voice_path} -filter_complex \"{subtitle_filter}\" "
-            f"-map 0:v -map 1:a -c:v libx264 -c:a aac -b:a 192k -shortest {output_path}"
-        )
-        result = os.system(ffmpeg_cmd)
-        if result != 0 or not os.path.exists(output_path):
-            raise Exception("FFmpeg failed to generate final video.")
+
+        command = [
+            "ffmpeg", "-y", "-i", video_path, "-i", voice_path,
+            "-filter_complex", subtitle_filter,
+            "-map", "0:v", "-map", "1:a",
+            "-c:v", "libx264", "-c:a", "aac",
+            "-shortest", output_path
+        ]
+
+        subprocess.run(command, check=True)
 
         return jsonify({"video": output_path})
 
@@ -89,4 +99,4 @@ def generate_video():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    app.run(host="0.0.0.0", port=3000)
