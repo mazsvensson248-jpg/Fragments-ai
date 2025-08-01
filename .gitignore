@@ -1,49 +1,96 @@
-# Python cache files
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+*$py.class
+
+# C extensions
 *.so
 
-# Environment
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Pytest cache
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# VS Code settings
+.vscode/
+
+# Environment variables
 .env
 *.env
-
-# macOS
-.DS_Store
-
-# VSCode & other IDE settings
-.vscode/
-.idea/
-
-# OS-generated
-Thumbs.db
-
-# Compiled files
-*.egg-info/
-*.egg
-build/
-dist/
-
-# Logs
-*.log
 
 # Virtual environments
 venv/
 ENV/
 env/
+env.bak/
+venv.bak/
 
-# Audio/video output
+# macOS
+.DS_Store
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite3
+
+# Audio/video output files (generated)
 *.mp3
 *.mp4
 *.wav
 
-# Whisper/pytube output files
+# Whisper / pytube output files
 input_video.mp4
 voice.mp3
 final_video.mp4
 mixed_audio.mp3
 
-# Jupyter Notebooks (if used)
-*.ipynb_checkpoints
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
 
 # Render build cache
 render-build/
