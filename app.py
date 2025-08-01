@@ -20,10 +20,9 @@ def generate_video():
     if not prompt or not links:
         return jsonify({"error": "Missing data"}), 400
 
-    # OBS! Detta är en placeholder. Du kan koppla in riktig video-API här.
     dummy_path = "static/dummy.mp4"
     with open(dummy_path, "wb") as f:
-        f.write(b"\x00")  # placeholder byte
+        f.write(b"\x00")
 
     return send_file(dummy_path, as_attachment=True, download_name="generated_video.mp4")
 
@@ -35,9 +34,8 @@ def chat():
     if not user_msg:
         return jsonify({"response": "Ingen fråga skickad."}), 400
 
-    # Enkel placeholder-AI
     return jsonify({"response": f"Du sa: {user_msg}"})
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=3000)
+    app.run(host="0.0.0.0", port=8000)
