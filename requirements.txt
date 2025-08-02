@@ -5,3 +5,4 @@ pytube
 whisper
 torch
 ffmpeg-python
+gunicorn
