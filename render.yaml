@@ -1,19 +1,10 @@
 services:
   - type: web
-    name: fragments-ai-backend
+    name: fragments-ai
     env: python
     plan: free
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-    startCommand: gunicorn app:app --bind 0.0.0.0:8000
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:10000
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.10
-    autoDeploy: true
-    buildFilter:
-      paths:
-        - app.py
-        - requirements.txt
-        - render.yaml
-        - static/index.html
+      - key: PORT
+        value: 10000
