@@ -1,8 +1,4 @@
-flask
-flask-cors
-gTTS
-pytube
-whisper
-torch
-ffmpeg-python
-gunicorn
+Flask==2.3.3
+Werkzeug==2.3.7
+requests==2.31.0
+gunicorn==21.2.0
