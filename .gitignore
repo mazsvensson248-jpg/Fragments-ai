@@ -53,24 +53,23 @@ coverage.xml
 *.mo
 *.pot
 
-# Django stuff:
+# Flask / Django
+instance/
+.webassets-cache
 *.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
+# Environments
+.env
+.env.*
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -79,56 +78,20 @@ target/
 profile_default/
 ipython_config.py
 
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# PEP 582
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
+# mypy / Pyre / type checkers
 .mypy_cache/
+.pyre/
 .dmypy.json
 dmypy.json
 
-# Pyre type checker
-.pyre/
-
-# IDE
+# IDEs / Editors
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# OS
+# OS-specific
 .DS_Store
 .DS_Store?
 ._*
@@ -143,41 +106,20 @@ Thumbs.db
 tmp/
 temp/
 
-# Logs
-*.log
+# Node / JavaScript (if using any)
+node_modules/
+npm-debug.log*
+.eslintcache
+.yarn-integrity
+*.tgz
 
-# Runtime data
+# Serverless / Containers
+.serverless/
+.dockerignore
+Dockerfile
+
+# Misc
 pids
 *.pid
 *.seed
 *.pid.lock
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env
-.env.test
-.env.local
-.env.*.local
-
-# Serverless directories
-.serverless/
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
