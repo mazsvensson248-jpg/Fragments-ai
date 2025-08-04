@@ -20,8 +20,6 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -38,64 +36,16 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 htmlcov/
 .tox/
-.nox/
 .coverage
 .coverage.*
 .cache
 nosetests.xml
 coverage.xml
 *.cover
-*.py,cover
 .hypothesis/
 .pytest_cache/
 
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# PEP 582
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
+# Virtual environments
 .env
 .venv
 env/
@@ -104,29 +54,12 @@ ENV/
 env.bak/
 venv.bak/
 
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
@@ -137,47 +70,41 @@ dmypy.json
 ehthumbs.db
 Thumbs.db
 
-# Temporary files
-*.tmp
-*.temp
-tmp/
+# Application specific
+uploads/
+outputs/
 temp/
+generated_videos/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
 
 # Logs
 *.log
+logs/
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env
-.env.test
+# Environment variables
 .env.local
-.env.*.local
+.env.development
+.env.test
+.env.production
 
-# Serverless directories
-.serverless/
+# Database
+*.db
+*.sqlite
+*.sqlite3
 
-# FuseBox cache
-.fusebox/
+# API keys and secrets
+secrets.json
+config.json
+.secrets/
 
-# DynamoDB Local files
-.dynamodb/
+# Docker
+.dockerignore
 
-# TernJS port file
-.tern-port
+# Temporary files
+tmp/
+*.tmp
+*.temp
