@@ -1,126 +1,23 @@
-# Byte-compiled / optimized / DLL files
+# Railway-specific ignores
+.railway/
+railway.json
+.env.railway
+
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
 
-# PyInstaller
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
+# Flask
 instance/
 .webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# PEP 582
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
 
 # IDE
 .vscode/
@@ -132,10 +29,12 @@ dmypy.json
 .DS_Store
 .DS_Store?
 ._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
+ehthumbs.db
+
+# Logs
+*.log
+logs/
 
 # Temporary files
 *.tmp
@@ -143,41 +42,39 @@ Thumbs.db
 tmp/
 temp/
 
-# Logs
-*.log
+# Video processing (Railway ephemeral)
+temp_videos/
+output_videos/
+*.mp4
+*.wav
+*.mp3
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
+# Environment variables
 .env
-.env.test
 .env.local
 .env.*.local
 
-# Serverless directories
-.serverless/
+# Distribution
+build/
+dist/
+*.egg-info/
 
-# FuseBox cache
-.fusebox/
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
 
-# DynamoDB Local files
-.dynamodb/
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
 
-# TernJS port file
-.tern-port
+# Node (if any)
+node_modules/
+npm-debug.log*
+
+# Railway deployment files
+.railway-*
+railway-*
