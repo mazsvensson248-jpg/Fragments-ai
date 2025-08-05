@@ -1,277 +1,181 @@
-from flask import Flask, render_template, request, jsonify, send_file
+# Required imports
+from flask import Flask, request, send_file
 import os
 import subprocess
 import re
-import threading
-import tempfile
-from werkzeug.exceptions import BadRequest
+from pytube import YouTube
 from gtts import gTTS
 import whisper
-from pytube import YouTube
-import uuid
+import tempfile
 import shutil
-import logging
-
-# Railway-specific logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Railway optimized configuration
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB for Railway
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+# Utility functions
+def clean_temp_files(temp_paths):
+    """Remove all temporary files and directories"""
+    for path in temp_paths:
+        try:
+            if os.path.isdir(path):
+                shutil.rmtree(path)
+            elif os.path.exists(path):
+                os.remove(path)
+        except Exception as e:
+            print(f"Error cleaning up {path}: {e}")
 
-# Railway ephemeral storage paths
-TEMP_DIR = "/tmp/fragments_temp"
-OUTPUT_DIR = "/tmp/fragments_output"
-os.makedirs(TEMP_DIR, exist_ok=True)
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-# In-memory status storage for Railway
-processing_status = {}
-
-def railway_only_check():
-    """Ensure this only works on Railway.com"""
-    if not os.environ.get('RAILWAY_ENVIRONMENT'):
-        raise Exception("❌ This app is exclusively designed for Railway.com deployment")
-    return True
-
-def clean_text_railway(text):
-    """Railway-safe text cleaning"""
-    if not text:
-        return ""
-    text = str(text).strip()[:100]  # Limit for Railway performance
-    text = re.sub(r'[^\w\s.,!?-]', '', text)
-    return text.replace("'", "").replace('"', '').replace('\\', '')
-
-def download_youtube_railway(url, output_path, session_id):
-    """Railway-optimized YouTube download"""
+def download_youtube_video(url):
+    """Download YouTube video at 720p or lower quality"""
     try:
-        processing_status[session_id]['step'] = "Downloading video..."
-        logger.info(f"Railway download starting: {session_id}")
-        
-        yt = YouTube(url, use_oauth=False, allow_oauth_cache=False)
-        
-        # Railway prefers progressive streams
-        stream = yt.streams.filter(progressive=True, file_extension='mp4', resolution='480p').first()
-        if not stream:
-            stream = yt.streams.filter(progressive=True, file_extension='mp4').first()
-        if not stream:
-            stream = yt.streams.filter(file_extension='mp4').first()
+        yt = YouTube(url)
+        # Try to get 720p first, fall back to highest available below 720p
+        stream = yt.streams.filter(
+            progressive=True, 
+            file_extension='mp4', 
+            res='720p'
+        ).first() or yt.streams.filter(
+            progressive=True, 
+            file_extension='mp4'
+        ).order_by('resolution').desc().first()
         
         if not stream:
             raise Exception("No suitable video stream found")
-        
-        filename = f"railway_bg_{session_id}.mp4"
-        filepath = os.path.join(output_path, filename)
-        
-        stream.download(output_path, filename=filename)
-        logger.info(f"✅ Railway download complete: {filepath}")
-        return filepath
-        
+            
+        # Download to temp directory
+        temp_dir = tempfile.mkdtemp()
+        return stream.download(output_path=temp_dir), temp_dir
     except Exception as e:
-        logger.error(f"Railway download error: {e}")
-        raise Exception(f"Download failed: {str(e)}")
+        raise Exception(f"YouTube download failed: {str(e)}")
 
-def generate_video_railway(prompt, video_urls, session_id):
-    """Railway-optimized video generation"""
-    session_dir = os.path.join(TEMP_DIR, session_id)
-    os.makedirs(session_dir, exist_ok=True)
+def create_subtitle_filter(segments):
+    """Create FFmpeg filter for subtitles"""
+    def clean_text(text):
+        return re.sub(r"[^a-zA-Z0-9,.?! ]", "", text)
+
+    filters = []
+    for segment in segments:
+        for word_info in segment.get("words", []):
+            word = clean_text(word_info["word"])
+            start = word_info["start"]
+            end = word_info["end"]
+            
+            filter_text = (
+                f"drawtext=font='Arial':text='{word}':"
+                f"fontsize=60:fontcolor=white:bordercolor=black:borderw=2:"
+                f"x=(w-text_w)/2:y=(h-text_h)/2:"
+                f"enable='between(t,{start},{end})'"
+            )
+            filters.append(filter_text)
+    
+    return ','.join(filters)
+
+def process_video(story_text, youtube_urls):
+    """Main video processing function"""
+    temp_paths = []  # Track files to clean up
     
     try:
-        # Railway check
-        railway_only_check()
+        # Create working directory
+        work_dir = tempfile.mkdtemp()
+        temp_paths.append(work_dir)
         
-        processing_status[session_id] = {'step': 'Railway processing...', 'progress': 0, 'status': 'processing'}
+        # 1. Generate voice narration
+        print("🎤 Generating voice narration...")
+        voice_path = os.path.join(work_dir, "narration.mp3")
+        tts = gTTS(text=story_text, lang="en")
+        tts.save(voice_path)
+        temp_paths.append(voice_path)
         
-        # Step 1: Generate speech (Railway optimized)
-        processing_status[session_id]['step'] = "Generating speech..."
-        processing_status[session_id]['progress'] = 20
+        # 2. Generate transcript with timestamps
+        print("📝 Creating transcript...")
+        model = whisper.load_model("base")
+        result = model.transcribe(voice_path, word_timestamps=True)
         
-        prompt_clean = prompt[:300]  # Railway length limit
-        tts = gTTS(text=prompt_clean, lang="en", slow=False)
-        voice_file = os.path.join(session_dir, "voice.mp3")
-        tts.save(voice_file)
+        # 3. Download YouTube videos
+        print("📥 Downloading videos...")
+        video_segments = []
+        for url in youtube_urls:
+            video_path, temp_dir = download_youtube_video(url)
+            video_segments.append(video_path)
+            temp_paths.extend([video_path, temp_dir])
         
-        # Convert to WAV for Railway
-        wav_file = os.path.join(session_dir, "voice.wav")
-        subprocess.run([
-            'ffmpeg', '-y', '-i', voice_file,
-            '-acodec', 'pcm_s16le', '-ar', '16000',
-            wav_file
-        ], check=True, capture_output=True, timeout=120)
-        
-        processing_status[session_id]['progress'] = 40
-        
-        # Step 2: Download video
-        processing_status[session_id]['step'] = "Downloading background..."
-        background_video = download_youtube_railway(video_urls[0], session_dir, session_id)
-        processing_status[session_id]['progress'] = 60
-        
-        # Step 3: Transcribe with Railway-optimized Whisper
-        processing_status[session_id]['step'] = "Creating subtitles..."
-        model = whisper.load_model("tiny")  # Fastest for Railway
-        result = model.transcribe(wav_file, word_timestamps=True, language="en")
-        processing_status[session_id]['progress'] = 75
-        
-        # Step 4: Create subtitle filters
-        processing_status[session_id]['step'] = "Rendering video..."
-        drawtext_filters = []
-        
-        for segment in result["segments"]:
-            for word_info in segment.get("words", []):
-                word = clean_text_railway(word_info["word"])
-                if word:
-                    start_time = word_info["start"]
-                    end_time = word_info["end"]
-                    
-                    filter_text = (
-                        f"drawtext=text='{word}'"
-                        f":fontsize=40"
-                        f":fontcolor=white"
-                        f":bordercolor=black"
-                        f":borderw=2"
-                        f":x=(w-text_w)/2"
-                        f":y=h*0.85"
-                        f":enable='between(t,{start_time},{end_time})'"
-                    )
-                    drawtext_filters.append(filter_text)
-        
-        # Step 5: Railway FFmpeg processing
-        output_file = os.path.join(OUTPUT_DIR, f"railway_{session_id}.mp4")
-        
-        if drawtext_filters:
-            video_filter = ",".join(drawtext_filters[:50])  # Limit for Railway
+        # 4. Combine videos if multiple
+        if len(video_segments) > 1:
+            print("🔄 Combining videos...")
+            concat_list = os.path.join(work_dir, "concat.txt")
+            with open(concat_list, 'w') as f:
+                for video in video_segments:
+                    f.write(f"file '{video}'\n")
+            
+            combined_video = os.path.join(work_dir, "combined.mp4")
+            subprocess.run([
+                'ffmpeg', '-f', 'concat', '-safe', '0',
+                '-i', concat_list, '-c', 'copy', combined_video
+            ], check=True)
+            
+            input_video = combined_video
+            temp_paths.extend([concat_list, combined_video])
         else:
-            video_filter = "null"
+            input_video = video_segments[0]
         
-        cmd = [
+        # 5. Create final video with subtitles and audio
+        print("🎬 Creating final video...")
+        output_path = os.path.join(work_dir, "final_output.mp4")
+        subtitle_filter = create_subtitle_filter(result["segments"])
+        
+        subprocess.run([
             'ffmpeg', '-y',
-            '-i', background_video,
-            '-i', wav_file,
-            '-filter_complex', f'[0:v]{video_filter}[v]',
-            '-map', '[v]', '-map', '1:a',
-            '-c:v', 'libx264', '-preset', 'fast',
-            '-crf', '28',  # Railway optimized quality
-            '-c:a', 'aac', '-b:a', '96k',
-            '-t', '60',  # 60 second limit for Railway
-            '-movflags', '+faststart',
-            output_file
-        ]
+            '-i', input_video,
+            '-i', voice_path,
+            '-vf', subtitle_filter,
+            '-map', '0:v',
+            '-map', '1:a',
+            '-c:v', 'libx264',
+            '-preset', 'fast',
+            '-crf', '23',
+            '-c:a', 'aac',
+            '-shortest',
+            output_path
+        ], check=True)
         
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-        
-        if result.returncode != 0:
-            raise Exception(f"FFmpeg failed: {result.stderr}")
-        
-        if not os.path.exists(output_file) or os.path.getsize(output_file) < 1000:
-            raise Exception("Video generation failed")
-        
-        processing_status[session_id]['step'] = "Complete!"
-        processing_status[session_id]['progress'] = 100
-        processing_status[session_id]['status'] = 'completed'
-        processing_status[session_id]['output_file'] = output_file
-        
-        logger.info(f"✅ Railway video generation complete: {session_id}")
-        return output_file
-        
-    except Exception as e:
-        processing_status[session_id]['status'] = 'failed'
-        processing_status[session_id]['error'] = str(e)
-        logger.error(f"Railway generation error: {e}")
-        raise
+        return output_path, temp_paths
     
-    finally:
-        # Railway cleanup
-        if os.path.exists(session_dir):
-            shutil.rmtree(session_dir, ignore_errors=True)
-
-def process_async_railway(prompt, video_urls, session_id):
-    """Railway async processing"""
-    try:
-        generate_video_railway(prompt, video_urls, session_id)
     except Exception as e:
-        logger.error(f"Railway async error: {e}")
+        clean_temp_files(temp_paths)
+        raise Exception(f"Video processing failed: {str(e)}")
 
-# Railway Flask routes
-@app.route('/')
-def index():
-    railway_only_check()
-    return render_template('index.html')
-
+# API Endpoints
 @app.route('/api/video', methods=['POST'])
 def generate_video():
     try:
-        railway_only_check()
-        
+        # Get request data
         data = request.get_json()
-        if not data:
-            raise BadRequest("No data provided")
+        story = data.get('prompt')
+        youtube_links = data.get('links', [])
         
-        prompt = data.get('prompt', '').strip()
-        links = data.get('links', [])
+        # Validate input
+        if not story or not youtube_links:
+            return {"error": "Missing prompt or video links"}, 400
         
-        if not prompt:
-            raise BadRequest("Prompt required")
-        if not links or len(links) > 5:  # Railway limit
-            raise BadRequest("Please provide 1-5 video links")
+        if len(youtube_links) > 10:
+            return {"error": "Maximum 10 videos allowed"}, 400
         
-        session_id = str(uuid.uuid4())
+        # Process video
+        output_file, temp_paths = process_video(story, youtube_links)
         
-        # Start Railway processing
-        thread = threading.Thread(
-            target=process_async_railway,
-            args=(prompt, links, session_id)
-        )
-        thread.start()
-        
-        return jsonify({
-            "status": "started",
-            "message": "Railway video generation started!",
-            "session_id": session_id
-        })
-        
+        # Send response
+        try:
+            return send_file(
+                output_file,
+                mimetype='video/mp4',
+                as_attachment=True,
+                download_name='generated_video.mp4'
+            )
+        finally:
+            clean_temp_files(temp_paths)
+            
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return {"error": str(e)}, 500
 
-@app.route('/api/status/<session_id>')
-def get_status(session_id):
-    railway_only_check()
-    if session_id not in processing_status:
-        return jsonify({"error": "Session not found"}), 404
-    return jsonify(processing_status[session_id])
-
-@app.route('/download/<session_id>')
-def download_video(session_id):
-    try:
-        railway_only_check()
-        
-        if session_id not in processing_status:
-            return jsonify({"error": "Session not found"}), 404
-        
-        status = processing_status[session_id]
-        if status.get('status') != 'completed':
-            return jsonify({"error": "Video not ready"}), 400
-        
-        output_file = status.get('output_file')
-        if not output_file or not os.path.exists(output_file):
-            return jsonify({"error": "File not found"}), 404
-        
-        return send_file(
-            output_file,
-            as_attachment=True,
-            download_name=f"railway_fragments_video.mp4"
-        )
-        
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/health')
-def health():
-    railway_only_check()
-    return jsonify({"status": "Railway ready", "service": "FRAGMENTS AI"})
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port)
+# Server startup
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
