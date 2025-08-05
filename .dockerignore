@@ -1,4 +1,6 @@
-# Git
+# Railway Docker ignore
+.railway/
+railway.json
 .git
 .gitignore
 README.md
@@ -10,25 +12,9 @@ __pycache__
 *.pyd
 .Python
 env
-pip-log.txt
-pip-delete-this-directory.txt
-.tox
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git
-.mypy_cache
-.pytest_cache
-.hypothesis
-
-# Virtual environments
-venv/
-env/
-ENV/
+venv
+ENV
+.venv
 
 # IDE
 .vscode/
@@ -46,15 +32,15 @@ ENV/
 ehthumbs.db
 Thumbs.db
 
+# Logs
+*.log
+logs/
+
 # Temporary files
 *.tmp
 *.temp
 tmp/
 temp/
-
-# Node modules (if any)
-node_modules/
-npm-debug.log*
 
 # Build artifacts
 build/
@@ -65,3 +51,25 @@ dist/
 .env
 .env.local
 .env.*.local
+
+# Node modules
+node_modules/
+npm-debug.log*
+
+# Coverage
+.coverage
+.coverage.*
+.cache
+htmlcov/
+.pytest_cache/
+
+# Railway specific
+.railway-*
+railway-*
+
+# Video files (not needed in build)
+*.mp4
+*.wav
+*.mp3
+temp_videos/
+output_videos/
