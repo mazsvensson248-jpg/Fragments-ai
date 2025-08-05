@@ -1,62 +1,67 @@
-# Ignore Python cache
-__pycache__/
+# Git
+.git
+.gitignore
+README.md
+
+# Python
+__pycache__
 *.pyc
 *.pyo
 *.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
 
-# Ignore virtual environments
+# Virtual environments
 venv/
 env/
 ENV/
-.venv/
 
-# Ignore environment/config files
-.env
-.env.*
-*.env
-
-# Ignore OS and editor junk
-.DS_Store
-Thumbs.db
-.idea/
+# IDE
 .vscode/
-
-# Ignore Git and metadata
-.git
-.gitignore
-
-# Ignore test and temp files
-*.log
-*.tmp
+.idea/
 *.swp
 *.swo
-*.bak
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
 tmp/
 temp/
 
-# Ignore local video/audio files
-*.mp3
-*.mp4
-*.wav
-*.webm
-*.avi
-*.mov
+# Node modules (if any)
+node_modules/
+npm-debug.log*
 
-# Ignore build artifacts
+# Build artifacts
 build/
 dist/
 *.egg-info/
 
-# Ignore Jupyter notebooks
-.ipynb_checkpoints
-
-# Ignore coverage and test reports
-.coverage
-.tox/
-.pytest_cache/
-.cache/
-nosetests.xml
-coverage.xml
-
-# Ignore docker config artifacts (optional)
-docker-compose.override.yml
+# Environment variables
+.env
+.env.local
+.env.*.local
