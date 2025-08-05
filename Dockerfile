@@ -1,38 +1,45 @@
-# Use Python 3.11 slim image
+# Railway.com optimized Dockerfile
 FROM python:3.11-slim
 
-# Set working directory
-WORKDIR /app
-
-# Set environment variables
+# Railway environment setup
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV FLASK_APP=app.py
+ENV FLASK_APP=main.py
 ENV FLASK_ENV=production
+ENV RAILWAY_ENVIRONMENT=production
 
-# Install system dependencies
+# Set Railway-specific working directory
+WORKDIR /app
+
+# Install Railway-required system dependencies
 RUN apt-get update && apt-get install -y \
+    ffmpeg \
     gcc \
-    && rm -rf /var/lib/apt/lists/*
+    git \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Copy requirements first for better caching
+# Copy requirements for Railway caching
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with Railway optimizations
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy Railway application code
 COPY . .
 
-# Create templates directory if it doesn't exist
-RUN mkdir -p templates
+# Create Railway-required directories
+RUN mkdir -p templates static /tmp/fragments_temp /tmp/fragments_output
 
-# Expose port
-EXPOSE 5000
+# Railway port exposure
+EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+# Railway health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
 
-# Run with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "120", "app:app"]
+# Railway-optimized startup
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "300", "--worker-class", "sync", "--max-requests", "50", "--preload", "main:app"]
