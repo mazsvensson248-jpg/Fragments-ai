@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRAGMENTS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #0f0f0f;
+      color: white;
+    }
+    header {
+      text-align: center;
+      padding: 2rem 1rem 1rem;
+    }
+    header h1 {
+      color: #38bdf8;
+      font-size: 2.5rem;
+      margin: 0;
+    }
+    header p {
+      color: #9ca3af;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .card {
+      background-color: #181818;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      transition: 0.3s;
+      position: relative;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+    .card:hover {
+      background-color: #1f1f1f;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
+      border-color: #38bdf8;
+    }
+    .card-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    .card h2 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+    .card p {
+      color: #9ca3af;
+      margin-top: 0.5rem;
+    }
+    .external-link {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      color: #38bdf8;
+    }
+    #aiDashboard, #videoDashboard {
+      display: none;
+      padding: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .chat {
+      background: #181818;
+      padding: 1rem;
+      border-radius: 1rem;
+      height: 400px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+      border: 1px solid #2a2a2a;
+    }
+    .message {
+      margin-bottom: 1rem;
+      line-height: 1.4;
+    }
+    .user { color: #38bdf8; }
+    .ai { color: #9ca3af; }
+    .input-area {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .input-area input {
+      flex: 1;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      border: none;
+    }
+    .input-area button, .generate-btn {
+      background: #38bdf8;
+      color: black;
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    .back-button {
+      margin-top: 1rem;
+      text-align: center;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+      border-radius: 5px;
+      border: none;
+    }
+    .video-item {
+      margin-bottom: 0.5rem;
+    }
+    .video-item a, .video-item label {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FRAGMENTS</h1>
+    <p>Harness the power of AI to create, generate, and innovate. Your creative journey starts here.</p>
+  </header>
+
+  <section class="grid" id="mainGrid">
+    <div class="card" onclick="showVideoDashboard()">
+      <div class="card-icon" data-lucide="film"></div>
+      <h2>AI VIDEO GENERATOR</h2>
+      <p>Generate videos with subtitles and audio</p>
+    </div>
+    <div class="card" onclick="window.open('https://www.craiyon.com/', '_blank')">
+      <div class="card-icon" data-lucide="image"></div>
+      <h2>AI IMAGE GENERATOR</h2>
+      <p>Create stunning images with AI</p>
+      <div class="external-link" data-lucide="external-link"></div>
+    </div>
+    <div class="card">
+      <div class="card-icon" data-lucide="lightbulb"></div>
+      <h2>VIRAL SOCIAL POST IDEA</h2>
+      <p>Generate engaging social media content</p>
+    </div>
+    <div class="card" onclick="showAIDashboard()">
+      <div class="card-icon" data-lucide="bot"></div>
+      <h2>FRAGMENTS AI AGENT</h2>
+      <p>Chat with your personal AI assistant</p>
+    </div>
+  </section>
+
+  <section id="videoDashboard">
+    <h2>🎬 AI Video Generator</h2>
+    <label for="prompt">Enter your prompt:</label>
+    <textarea id="prompt" rows="4" placeholder="Write your story..."></textarea>
+
+    <label>Select up to 10 YouTube video links:</label>
+    <div class="video-list">
+      <div class="video-item"><input type="checkbox" value="https://youtu.be/7yl7Wc1dtWc"> Video 1</div>
+      <div class="video-item"><input type="checkbox" value="https://youtu.be/_A3po0HYwkY"> Video 2</div>
+      <div class="video-item"><input type="checkbox" value="https://youtu.be/-yPjP85CbQE"> Video 3</div>
+      <div class="video-item"><input type="checkbox" value="https://youtu.be/85z7jqGAGcc"> Video 4</div>
+      <div class="video-item"><input type="checkbox" value="https://youtu.be/_-2ZUciZgls"> Video 5</div>
+      <div class="video-item"><input type="checkbox" value="https://youtu.be/t_r-ST06jR4"> Video 6</div>
+      <div class="video-item"><input type="checkbox" value="https://youtu.be/s600FYgI5-s"> Video 7</div>
+      <div class="video-item"><input type="checkbox" value="https://youtu.be/952ILTHDgC4"> Video 8</div>
+      <div class="video-item"><input type="checkbox" value="https://youtu.be/u7kdVe8q5zs"> Video 9</div>
+      <div class="video-item"><input type="checkbox" value="https://youtu.be/1E7Ejfslhz8"> Video 10</div>
+    </div>
+
+    <button onclick="generateVideos()">Generate</button>
+    <div class="back-button">
+      <button onclick="goBack()">⬅ Back</button>
+    </div>
+  </section>
+
+  <section id="aiDashboard">
+    <h2>🤖 FRAGMENTS AI Chat</h2>
+    <div id="chatBox" class="chat"></div>
+    <div class="input-area">
+      <input id="userInput" type="text" placeholder="Type a message..." onkeydown="if(event.key==='Enter'){sendMessage()}">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+    <div class="back-button">
+      <button onclick="goBack()">⬅ Back</button>
+    </div>
+  </section>
+
+  <footer>
+    Powered by FRAGMENTS AI technology
+  </footer>
+
+  <script>
+    lucide.createIcons();
+
+    function showAIDashboard() {
+      document.getElementById('mainGrid').style.display = 'none';
+      document.getElementById('videoDashboard').style.display = 'none';
+      document.getElementById('aiDashboard').style.display = 'block';
+    }
+
+    function showVideoDashboard() {
+      document.getElementById('mainGrid').style.display = 'none';
+      document.getElementById('aiDashboard').style.display = 'none';
+      document.getElementById('videoDashboard').style.display = 'block';
+    }
+
+    function goBack() {
+      document.getElementById('aiDashboard').style.display = 'none';
+      document.getElementById('videoDashboard').style.display = 'none';
+      document.getElementById('mainGrid').style.display = 'grid';
+    }
+
+    function generateVideos() {
+      const prompt = document.getElementById('prompt').value.trim();
+      const selectedVideos = [...document.querySelectorAll('.video-item input:checked')].map(cb => cb.value);
+
+      if (!prompt) {
+        alert('Please enter a prompt!');
+        return;
+      }
+
+      if (selectedVideos.length === 0 || selectedVideos.length > 10) {
+        alert('Please select between 1 and 10 videos.');
+        return;
+      }
+
+      fetch("/api/video", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+          links: selectedVideos
+        })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Server error");
+        return res.blob();
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "generated_video.mp4";
+        a.click();
+      })
+      .catch(err => {
+        alert("❌ Failed to generate video: " + err.message);
+      });
+    }
+
+    const chatBox = document.getElementById('chatBox');
+    const userInput = document.getElementById('userInput');
+    const openRouterApiKey = "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";
+
+    function appendMessage(text, sender) {
+      const msg = document.createElement('div');
+      msg.classList.add('message', sender);
+      msg.textContent = text;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text) {
+        alert("Please enter a message.");
+        return;
+      }
+
+      appendMessage(text, 'user');
+      userInput.value = '';
+      appendMessage("⏳ AI is typing...", 'ai');
+
+      try {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${openRouterApiKey}`,
+            "HTTP-Referer": "https://fragments.ai",
+            "X-Title": "FRAGMENTS AI Chat"
+          },
+          body: JSON.stringify({
+            model: "openai/gpt-3.5-turbo",
+            messages: [
+              { role: "system", content: "You are a helpful assistant from FRAGMENTS AI." },
+              { role: "user", content: text }
+            ]
+          })
+        });
+
+        const data = await response.json();
+        const aiTyping = chatBox.querySelectorAll(".ai");
+        if (aiTyping.length) aiTyping[aiTyping.length - 1].remove();
+
+        if (data.choices && data.choices.length > 0) {
+          appendMessage(data.choices[0].message.content, 'ai');
+        } else {
+          appendMessage("❌ No response from AI.", 'ai');
+        }
+      } catch (err) {
+        appendMessage("❌ Error: " + err.message, 'ai');
+      }
+    }
+  </script>
+</body>
+  </html>
