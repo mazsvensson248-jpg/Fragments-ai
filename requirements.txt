@@ -1,5 +1,23 @@
-Flask==2.3.2
-gTTS==2.3.0
-pytube==15.0.0
-torch==2.0.1+cpu   # adjust version and +cpu or +cu depending on your target environment
-whisper @ git+https://github.com/openai/whisper.git
+# Speech recognition model
+openai-whisper
+
+# API interaction
+openai
+
+# Audio processing
+torch
+torchaudio
+ffmpeg-python
+
+# Web framework (choose one, remove the other if not needed)
+flask
+# fastapi
+# uvicorn[standard]
+# gunicorn
+
+# Data handling
+numpy
+pandas
+
+# Environment variables
+python-dotenv
