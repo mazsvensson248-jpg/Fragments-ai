@@ -1,21 +1,5 @@
-# Core web
-flask==3.0.3
-flask-cors==4.0.1
-gunicorn==22.0.0
-requests==2.32.3
-
-# YouTube download (more reliable than pytube)
-yt-dlp==2025.1.12
-
-# TTS
-gTTS==2.5.3
-
-# Whisper model + deps
-openai-whisper==20231117
-numpy==1.26.4
-
-# Optional: if you really want torchaudio, uncomment (otherwise whisper doesn't need it)
-# torchaudio==2.3.1
-
-# ffmpeg python wrapper isn't used (we call ffmpeg via subprocess), so omit it.
-# ffmpeg-python
+Flask
+pytube
+gTTS
+openai-whisper
+ffmpeg-python
