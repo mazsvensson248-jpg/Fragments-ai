@@ -1,16 +1,19 @@
 import os
-from flask import Flask, request, jsonify, render_template
+import logging
 import subprocess
+from flask import Flask, request, jsonify, render_template
 from pytube import YouTube
 from gtts import gTTS
 import whisper
-import tempfile
-import logging
 
-# Logging for Render debugging
+# Logging to help debug on Render
 logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
+
+# Preload Whisper model so it doesn't download mid-request
+logging.info("Loading Whisper model...")
+model = whisper.load_model("base")
 
 @app.route('/')
 def index():
@@ -28,20 +31,19 @@ def generate_video():
         logging.info(f"Downloading YouTube video: {youtube_url}")
         yt = YouTube(youtube_url)
         stream = yt.streams.filter(only_audio=True).first()
-        audio_file = tempfile.mktemp(suffix=".mp4")
-        stream.download(filename=audio_file)
+        audio_path = os.path.join("static", "videos", "input_audio.mp4")
+        os.makedirs(os.path.dirname(audio_path), exist_ok=True)
+        stream.download(filename=audio_path)
 
         logging.info("Generating TTS audio...")
         tts = gTTS("Hello from AI subtitles!", lang='en')
-        tts_audio = tempfile.mktemp(suffix=".mp3")
+        tts_audio = os.path.join("static", "videos", "tts_audio.mp3")
         tts.save(tts_audio)
 
         logging.info("Running Whisper transcription...")
-        model = whisper.load_model("base")
         result = model.transcribe(tts_audio, word_timestamps=True)
 
-        # Create subtitle file
-        subs_file = tempfile.mktemp(suffix=".srt")
+        subs_file = os.path.join("static", "videos", "subtitles.srt")
         with open(subs_file, "w") as f:
             for i, segment in enumerate(result["segments"], 1):
                 start = segment["start"]
@@ -52,20 +54,23 @@ def generate_video():
                 f.write(f"{text}\n\n")
 
         logging.info("Overlaying subtitles with FFmpeg...")
-        output_video = tempfile.mktemp(suffix=".mp4")
+        output_video = os.path.join("static", "videos", "output.mp4")
         subprocess.run([
-            "ffmpeg", "-y", "-i", audio_file, "-vf",
+            "ffmpeg", "-y", "-i", audio_path, "-vf",
             f"subtitles={subs_file}:force_style='FontName=DejaVu Sans,FontSize=24,PrimaryColour=&HFFFFFF&'",
             "-c:a", "aac", output_video
         ], check=True)
 
         logging.info("Video generation complete.")
-        return jsonify({"status": "success", "video_path": output_video})
+        return jsonify({
+            "status": "success",
+            "video_url": f"/static/videos/output.mp4"
+        })
 
     except Exception as e:
         logging.error(f"Error: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))  # Render sets PORT
+    port = int(os.environ.get("PORT", 5000))  # Render will set PORT
     app.run(host='0.0.0.0', port=port)
